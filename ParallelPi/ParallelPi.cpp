@@ -9,6 +9,12 @@ using namespace std;
 
 bool FindIsInCircle(double x, double y);
 
+//TODO!!
+//Separate functions
+//Comment code
+//Implement benchmarking
+
+
 int main(int argc, char* argv[])
 {
 	int mpiRank; 
@@ -62,21 +68,26 @@ int main(int argc, char* argv[])
 
 	if (mpiRank == 0)
 	{
+		cout << endl << "circle_count[" << mpiRank 
+			<< "] " << circle_count[mpiRank] << " / "
+			<< num;
+
 		int source = 1;
 		while(source < mpiSize)
 		{
 			MPI_Recv(&circle_count[source], mpiSize, MPI_INT, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 			count += circle_count[source];
+
+			cout << endl << "circle_count[" << source
+				<< "] " << circle_count[source] << " / "
+				<< num;
+
 			++source;
 		}
 
 		count += circle_count[0];		//Adds master's result to the count of all points
 		double PI = 4 * (double)count / (double)npoints;
 
-		cout << endl << "circle_count[0]" << circle_count[0];
-		cout << endl << "circle_count[1]" << circle_count[1];
-		cout << endl << "circle_count[2]" << circle_count[2];
-		cout << endl << "circle_count[3]" << circle_count[3];
 		
 		cout << endl << "count:" << count << endl;
 
