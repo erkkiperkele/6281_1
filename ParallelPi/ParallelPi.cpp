@@ -8,6 +8,7 @@
 using namespace std;
 
 bool FindIsInCircle(double x, double y);
+void CalculateCircleCount(int &num, int* circle_count, int mpiRank);
 
 //TODO!!
 //Separate functions
@@ -26,7 +27,6 @@ int main(int argc, char* argv[])
 
 	int npoints = 1000000;
 	int circle_count[mpiSize];
-	int i = 0;
 	int count = 0;
 	circle_count[mpiRank] = 0;
 
@@ -38,22 +38,7 @@ int main(int argc, char* argv[])
 
 	int num = npoints / mpiSize;
 
-	//p = number of tasks
-	//find out if I am MASTER or WORKER 
-
-
-	while(i< num)
-	{
-		double x = (double)rand() / (double)RAND_MAX;		
-		double y = (double)rand() / (double)RAND_MAX;		
-		bool isInCircle = FindIsInCircle(x, y);
-
-		if (isInCircle)
-		{
-			++circle_count[mpiRank];
-		}
-		++i;
-	}
+	CalculateCircleCount(num, circle_count, mpiRank);
 
 	if (mpiRank != 0)
 	{
@@ -103,4 +88,21 @@ bool FindIsInCircle(double x, double y)
 {
 	double distance = sqrt(pow(x, 2) + pow(y, 2));
 	return distance < 1;
+}
+
+void CalculateCircleCount(int &num, int* circle_count, int mpiRank)
+{
+	int i = 0;
+	while(i< num)
+	{
+		double x = (double)rand() / (double)RAND_MAX;		
+		double y = (double)rand() / (double)RAND_MAX;		
+		bool isInCircle = FindIsInCircle(x, y);
+
+		if (isInCircle)
+		{
+			++circle_count[mpiRank];
+		}
+		++i;
+	}
 }
