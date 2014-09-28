@@ -21,44 +21,31 @@ int main(int argc, char* argv[])
 	MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank);
 	MPI_Comm_size(MPI_COMM_WORLD, &mpiSize);
 	
-	auto startTime = MPI_Wtime();
+	double startTime = MPI_Wtime();
 
 	int npoints = 1000000;
 	int circle_count[mpiSize];
 	int count = 0;
-	//circle_count[mpiRank] = {0};
-
-	if (npoints % mpiSize != 0)
-	{
-		cout << endl << "please enter a multiple value of " << npoints << endl;
-		return 1;
-	}
 
 	//Divide total amount of work between all slave processes
 	int num = npoints / mpiSize;
-
+	int rem = num + (npoints % mpiSize); 
+	
 	circle_count[mpiRank] = 0;
-	cout << "TEMP:" << circle_count[mpiRank] << endl;
-	CalculateCircleCount(num, circle_count, mpiRank);
 
 	if (mpiRank != 0)
 	{
-		//circle_count[mpiRank] = 0;
-		//cout << "TEMP:" << circle_count[mpiRank] << endl;
-		//CalculateCircleCount(num, circle_count, mpiRank);
-
-		cout << "mpiRank: " << mpiRank << cout << " = " << circle_count[mpiRank] << endl;
+		CalculateCircleCount(num, circle_count, mpiRank);
 		MPI_Send(&circle_count, mpiSize, MPI_INT, 0, 0, MPI_COMM_WORLD);
 	}
 
 	if (mpiRank == 0)
 	{
-		//circle_count[mpiRank] = 0;
-		//cout << "TEMP:" << circle_count[mpiRank] << endl;
-		//CalculateCircleCount(num, circle_count, mpiRank);
+		CalculateCircleCount(rem, circle_count, mpiRank);
+
 		cout << endl << "circle_count[" << mpiRank
 			<< "] " << circle_count[mpiRank] << " / "
-			<< num;
+			<< rem;
 		count += circle_count[mpiRank];
 
 		int source = 1;
@@ -74,11 +61,9 @@ int main(int argc, char* argv[])
 			++source;
 		}
 
-		//count += circle_count[0];		//Adds master's result to the count of all points
 		double PI = 4 * (double)count / (double)npoints;
-
-		auto endTime = MPI_Wtime();
-		auto duration = endTime - startTime;
+		double endTime = MPI_Wtime();
+		double duration = endTime - startTime;
 		cout << endl << "count:" << count << endl;
 		cout << "number of points: " << npoints << endl;
 		cout << "value of Pi: " << PI << endl;

@@ -16,7 +16,7 @@ void Print(double &duration);
 
 int main()
 {
-	auto startTime = high_resolution_clock::now();
+	high_resolution_clock::time_point startTime = high_resolution_clock::now();
 
 	int npoints = 1000000;
 	int circle_count = 0;
@@ -40,10 +40,9 @@ int main()
 	cout << endl << "number of points: " << npoints << endl;
 	cout << "value of Pi: " << PI << endl;
 
-	auto endTime = high_resolution_clock::now();
-	auto time_span = duration_cast<duration<double> >(endTime - startTime).count();
+	high_resolution_clock::time_point endTime = high_resolution_clock::now();
+	double time_span = duration_cast<duration<double> >(endTime - startTime).count();
 	cout << "Duration: " << time_span << " seconds" << endl;
-	
 	Print(time_span);
 
 	return 0;
