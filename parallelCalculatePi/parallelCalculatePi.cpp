@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 	int circle_count[mpiSize];
 	int count = 0;
 
-	//Divide total amount of work between all slave processes
+	//Divide total amount of work between both master and slave processes
 	int num = npoints / mpiSize;
 	int rem = num + (npoints % mpiSize); 
 	
