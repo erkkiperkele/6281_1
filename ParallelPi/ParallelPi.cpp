@@ -4,17 +4,13 @@
 #include <cstdlib>
 #include <cmath>
 #include <mpi.h>
+#include <fstream>
 
 using namespace std;
 
 bool FindIsInCircle(double x, double y);
 void CalculateCircleCount(int &num, int* circle_count, int mpiRank);
-
-//TODO!!
-//Separate functions
-//Comment code
-//Implement benchmarking
-
+void Print(int &nodes, double &duration);
 
 int main(int argc, char* argv[])
 {
@@ -24,11 +20,13 @@ int main(int argc, char* argv[])
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank);
 	MPI_Comm_size(MPI_COMM_WORLD, &mpiSize);
+	
+	auto startTime = MPI_Wtime();
 
 	int npoints = 1000000;
 	int circle_count[mpiSize];
 	int count = 0;
-	circle_count[mpiRank] = 0;
+	//circle_count[mpiRank] = {0};
 
 	if (npoints % mpiSize != 0)
 	{
@@ -36,31 +34,37 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
+	//Divide total amount of work between all slave processes
 	int num = npoints / mpiSize;
 
+	circle_count[mpiRank] = 0;
+	cout << "TEMP:" << circle_count[mpiRank] << endl;
 	CalculateCircleCount(num, circle_count, mpiRank);
 
 	if (mpiRank != 0)
 	{
-		//Every slave sends its result to root
-		int source = 1;		
-		while (source < mpiSize)
-		{
-			MPI_Send(&circle_count[mpiRank], mpiSize, MPI_INT, 0, 0, MPI_COMM_WORLD);
-			++source;
-		}
+		//circle_count[mpiRank] = 0;
+		//cout << "TEMP:" << circle_count[mpiRank] << endl;
+		//CalculateCircleCount(num, circle_count, mpiRank);
+
+		cout << "mpiRank: " << mpiRank << cout << " = " << circle_count[mpiRank] << endl;
+		MPI_Send(&circle_count, mpiSize, MPI_INT, 0, 0, MPI_COMM_WORLD);
 	}
 
 	if (mpiRank == 0)
 	{
-		cout << endl << "circle_count[" << mpiRank 
+		//circle_count[mpiRank] = 0;
+		//cout << "TEMP:" << circle_count[mpiRank] << endl;
+		//CalculateCircleCount(num, circle_count, mpiRank);
+		cout << endl << "circle_count[" << mpiRank
 			<< "] " << circle_count[mpiRank] << " / "
 			<< num;
+		count += circle_count[mpiRank];
 
 		int source = 1;
 		while(source < mpiSize)
 		{
-			MPI_Recv(&circle_count[source], mpiSize, MPI_INT, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+			MPI_Recv(&circle_count, mpiSize, MPI_INT, source, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 			count += circle_count[source];
 
 			cout << endl << "circle_count[" << source
@@ -70,14 +74,17 @@ int main(int argc, char* argv[])
 			++source;
 		}
 
-		count += circle_count[0];		//Adds master's result to the count of all points
+		//count += circle_count[0];		//Adds master's result to the count of all points
 		double PI = 4 * (double)count / (double)npoints;
 
-		
+		auto endTime = MPI_Wtime();
+		auto duration = endTime - startTime;
 		cout << endl << "count:" << count << endl;
-
-		cout << endl << "number of points: " << npoints << endl;
+		cout << "number of points: " << npoints << endl;
 		cout << "value of Pi: " << PI << endl;
+
+		cout << endl << "Duration: " << duration << " seconds" << endl;
+		Print(mpiSize, duration);
 	}
 
 	MPI_Finalize();
@@ -90,7 +97,7 @@ bool FindIsInCircle(double x, double y)
 	return distance < 1;
 }
 
-void CalculateCircleCount(int &num, int* circle_count, int mpiRank)
+void CalculateCircleCount(int &num, int* circle_count, int slaveId)
 {
 	int i = 0;
 	while(i< num)
@@ -101,8 +108,15 @@ void CalculateCircleCount(int &num, int* circle_count, int mpiRank)
 
 		if (isInCircle)
 		{
-			++circle_count[mpiRank];
+			++circle_count[slaveId];
 		}
 		++i;
 	}
+}
+void Print(int &nodes, double &duration)
+{
+        std::ofstream myfile;
+	myfile.open("./ParallelPiOutput.csv", ios::app);
+	myfile << nodes << "\t" << duration << "\n";
+	myfile.close();
 }
