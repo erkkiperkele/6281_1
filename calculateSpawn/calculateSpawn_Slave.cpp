@@ -23,18 +23,30 @@ int main(int argc, char* argv[])
 	MPI_Comm_size(MPI_COMM_WORLD, &mpiSize);
 	MPI_Comm_get_parent(&master); 
 	
-	//TODO FROM HERE (cast and reduce)
+	cout << "SLAVE process # " << mpiRank << " / " << mpiSize << endl;
+	cout << "argv[0]: " << argv[0] << endl;
+	cout << "argv[1]: " << argv[1] << endl;
+	cout << "argv[2]: " << argv[2] << endl;
 
-	//Divide total amount of work between both master and slave processes
-	//int num = npoints / mpiSize;
-	//int rem = num + (npoints % mpiSize);
-    	int num = atoi( argv[0] );
-    	int rem = atoi( argv[1] );
+	int num;
+
+	if (mpiRank == 0)
+	{
+		num = atoi( argv[2] );
+	}
+	else
+	{
+		num = atoi( argv[1] );
+	}
 
 	int send = 0;
 	int recv = 0;
 
+
 	CalculateCircleCount(num, send);
+	cout << "Count: " << send << endl;
+
+	//TODO: Reduce communication not working!!
 	MPI_Reduce(&send, &recv, 1, MPI_INT, MPI_SUM, 0, master);
 
 

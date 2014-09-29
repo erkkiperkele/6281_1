@@ -15,6 +15,8 @@ void Print(int &nodes, double &duration);
 
 int main(int argc, char* argv[])
 {
+	cout << "Starting SLAVE process" << endl;
+
 	int mpiRank; 
 	int mpiSize;
 
@@ -23,12 +25,13 @@ int main(int argc, char* argv[])
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank);
 	MPI_Comm_size(MPI_COMM_WORLD, &mpiSize);
+        int numworkers = atoi( argv[1] );
 	
 	double startTime = MPI_Wtime();
 
 	int npoints = 1000000;
-	int num = npoints / mpiSize;
-	int rem = num + (npoints % mpiSize);
+	int num = npoints / numworkers;
+	int rem = num + (npoints % numworkers);
 	
 
 	//Creating arguments for slaves with the total amount of operations to be performed for the first slave, and the amount for all over slaves.
@@ -43,30 +46,19 @@ int main(int argc, char* argv[])
 
 	args[1] = (char*)numString.c_str();
 	args[0] = (char*)remString.c_str();
-	//DO NOT CHECKIN:
+
 	cout << "numString: " << args[1]<< endl;
 	cout << "remString: " << args[0]<< endl;
-
-	//char arg1[15];
-	//char arg2[15];
-	//snprintf(arg2,sizeof(arg2),"%d",arg[2]);
-	//char* argsForKids[]={arg1,arg2,NULL};/
-
-
-        //int numworkers = atoi( argv[0] );
-	int numworkers = 10;
-	
-	//DO NOT CHECKIN
+	cout << "Master argv[0]: " << argv[0] << endl;
+	cout << "Master argv[1]: " << argv[1] << endl;
 	cout << "numWorkers: " << numworkers << endl;
+
 	MPI_Comm_spawn("calculateSpawn_Slave", args, numworkers, MPI_INFO_NULL, 0, MPI_COMM_SELF, &workercomm, MPI_ERRCODES_IGNORE);
-	//MPI_Comm_spawn("calculateSpawn_Slave", MPI_ARGV_NULL, numworkers, MPI_INFO_NULL, 0, MPI_COMM_SELF, &workercomm, MPI_ERRCODES_IGNORE);
 	
-	//TODO FROM HERE (cast and reduce)
 
 	int send = 0;
 	int recv = 0;
 	MPI_Reduce(&send, &recv, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-	//MPI_Reduce(&amp;local_sum, &amp;global_sum, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
 
 	double PI = 4 * (double)recv / (double)npoints;
 	double endTime = MPI_Wtime();
