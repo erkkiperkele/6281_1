@@ -21,34 +21,23 @@ int main(int argc, char* argv[])
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank);
 	MPI_Comm_size(MPI_COMM_WORLD, &mpiSize);
-	MPI_Comm_get_parent(&master); 
+	MPI_Comm_get_parent(&master); 			//Get the address of the master
 	
-	cout << "SLAVE process # " << mpiRank << " / " << mpiSize << endl;
-	cout << "argv[0]: " << argv[0] << endl;
-	cout << "argv[1]: " << argv[1] << endl;
-	cout << "argv[2]: " << argv[2] << endl;
+	cout << "SLAVE process # " << mpiRank << "/" << mpiSize << endl;
 
 	int num;
-
-	if (mpiRank == 0)
-	{
-		num = atoi( argv[2] );
-	}
-	else
-	{
-		num = atoi( argv[1] );
-	}
+	num = mpiRank == 0
+		? atoi (argv[2])			//1st slaves calculates its share of points plus the remainder
+		: atoi (argv[1]);			//all other slaves just calculate their share of points
 
 	int send = 0;
 	int recv = 0;
 
-
 	CalculateCircleCount(num, send);
-	cout << "Count: " << send << endl;
+	cout << "SLAVE num: " << argv[2] << endl;
+	cout << "SLAVE Count: " << send << endl;
 
-	//TODO: Reduce communication not working!!
-	MPI_Reduce(&send, &recv, 1, MPI_INT, MPI_SUM, 0, master);
-
+	MPI_Reduce(&send, &recv, 1, MPI_INT, MPI_SUM, 0, master);	//Slaves sends their results to be reduced by the master
 
 	MPI_Finalize();
 	return 0;

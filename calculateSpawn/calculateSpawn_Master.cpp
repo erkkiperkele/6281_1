@@ -15,7 +15,7 @@ void Print(int &nodes, double &duration);
 
 int main(int argc, char* argv[])
 {
-	cout << "Starting SLAVE process" << endl;
+	cout << "--------- Starting SLAVE process ---------" << endl;
 
 	int mpiRank; 
 	int mpiSize;
@@ -25,59 +25,49 @@ int main(int argc, char* argv[])
 	MPI_Init(&argc, &argv);
 	MPI_Comm_rank(MPI_COMM_WORLD, &mpiRank);
 	MPI_Comm_size(MPI_COMM_WORLD, &mpiSize);
-        int numworkers = atoi( argv[1] );
+
+        int numworkers = atoi( argv[1] ); 		//Get the number of workers from command line arguments
 	
-	double startTime = MPI_Wtime();
+	double startTime = MPI_Wtime();			//Starts chrono
 
 	int npoints = 1000000;
-	int num = npoints / numworkers;
-	int rem = num + (npoints % numworkers);
-	
+	int num = npoints / numworkers;			//Number of points to be calculated per worker
+	int rem = num + (npoints % numworkers);		//Number of points remaining to arrive to the total (npoints)
 
-	//Creating arguments for slaves with the total amount of operations to be performed for the first slave, and the amount for all over slaves.
+	//Instantiates 2 arguments to be passed to the slaves.
 	char arg1[15];
 	char arg2[15];
 	
-	//create variables to be passed to spawned kids*****************************
-	snprintf(arg1,sizeof(arg1),"%d",num);
-	snprintf(arg2,sizeof(arg2),"%d",rem);
+	snprintf(arg1,sizeof(arg1),"%d",num);		//1st argument: All but the 1st slave (0) will perform this number of operations
+	snprintf(arg2,sizeof(arg2),"%d",rem);		//2nd argument: The 1st slave (0) will perform the same number of operations as others plus the remainder
 	char* args[]={arg1,arg2,NULL};
 
-	//char** args = new char*[2];
+	cout << "MASTER numString: " << args[1]<< endl;
+	cout << "MASTER remString: " << args[0]<< endl;
+	cout << "MASTER argv[0]: " << argv[0] << endl;
+	cout << "MASTER argv[1]: " << argv[1] << endl;
+	cout << "MASTER numWorkers: " << numworkers << endl;
 
-	//std::ostringstream n,r;
-	//n << num;
-	//std::string numString(n.str());
-	//r << rem;
-	//std::string remString(r.str());
-
-
-	//args[1] = (char*)numString.c_str();
-	//args[0] = (char*)remString.c_str();
-
-	cout << "numString: " << args[1]<< endl;
-	cout << "remString: " << args[0]<< endl;
-	cout << "Master argv[0]: " << argv[0] << endl;
-	cout << "Master argv[1]: " << argv[1] << endl;
-	cout << "numWorkers: " << numworkers << endl;
-
+	//Master spawns slave processes
 	MPI_Comm_spawn("calculateSpawn_Slave", args, numworkers, MPI_INFO_NULL, 0, MPI_COMM_SELF, &workercomm, MPI_ERRCODES_IGNORE);
-	
 
 	int send = 0;
 	int recv = 0;
+
+	//Master reduces the slaves results to 1 value.
 	MPI_Reduce(&send, &recv, 1, MPI_INT, MPI_SUM, MPI_ROOT, workercomm);
 
 	double PI = 4 * (double)recv / (double)npoints;
-	double endTime = MPI_Wtime();
+
+	double endTime = MPI_Wtime();			//Pi calculation is over. Chrono stops.
 	double duration = endTime - startTime;
 
-	cout << "reduce result: " << recv << endl;
-	cout << "number of points: " << npoints << endl;
-	cout << "value of Pi: " << PI << endl;
+	cout << "MASTER reduce result: " << recv << endl;
+	cout << "MASTER number of points: " << npoints << endl;
+	cout << "MASTER value of Pi: " << PI << endl;
 
-	cout << endl << "Duration: " << duration << " seconds" << endl;
-	Print(mpiSize, duration);
+	cout << endl << "MASTER Duration: " << duration << " seconds" << endl;
+	Print(numworkers, duration);
 
 	MPI_Finalize();
 	return 0;
