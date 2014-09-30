@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
 
 	int send = 0;
 	int recv = 0;
-	MPI_Reduce(&send, &recv, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+	MPI_Reduce(&send, &recv, 1, MPI_INT, MPI_SUM, MPI_ROOT, workercomm);
 
 	double PI = 4 * (double)recv / (double)npoints;
 	double endTime = MPI_Wtime();
