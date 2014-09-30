@@ -35,17 +35,25 @@ int main(int argc, char* argv[])
 	
 
 	//Creating arguments for slaves with the total amount of operations to be performed for the first slave, and the amount for all over slaves.
-	char** args = new char*[2];
+	char arg1[15];
+	char arg2[15];
+	
+	//create variables to be passed to spawned kids*****************************
+	snprintf(arg1,sizeof(arg1),"%d",num);
+	snprintf(arg2,sizeof(arg2),"%d",rem);
+	char* args[]={arg1,arg2,NULL};
 
-	std::ostringstream n,r;
-	n << num;
-	std::string numString(n.str());
-	r << rem;
-	std::string remString(r.str());
+	//char** args = new char*[2];
+
+	//std::ostringstream n,r;
+	//n << num;
+	//std::string numString(n.str());
+	//r << rem;
+	//std::string remString(r.str());
 
 
-	args[1] = (char*)numString.c_str();
-	args[0] = (char*)remString.c_str();
+	//args[1] = (char*)numString.c_str();
+	//args[0] = (char*)remString.c_str();
 
 	cout << "numString: " << args[1]<< endl;
 	cout << "remString: " << args[0]<< endl;
